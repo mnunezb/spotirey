@@ -4,6 +4,7 @@ import { GLOBAL } from './services/global';
 import { UserService } from './services/user.service';
 import { User } from './models/user';
 
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
