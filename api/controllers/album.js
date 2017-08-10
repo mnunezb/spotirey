@@ -79,6 +79,7 @@ function updateAlbum(req, res) {
     Album.findByIdAndUpdate(albumId, update, (err, albumUpdated) => {
         if (err) {
             res.status(500).send({ message: 'Error en el servidor' })
+            console.log(err);
         } else {
             if (!albumUpdated) {
                 res.status(404).send({ message: 'No se ha actualizado el albúm' })

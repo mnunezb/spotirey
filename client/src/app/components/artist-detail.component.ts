@@ -4,16 +4,19 @@ import { Router, ActivatedRoute, Params } from '@angular/router';
 import { GLOBAL } from '../services/global';
 import { UserService } from '../services/user.service';
 import { ArtistService } from '../services/artist.service';
+import { AlbumService } from '../services/album.service';
 import { Artist } from '../models/artist';
+import { Album } from '../models/album';
 
 @Component({
     selector: 'artist-detail',
     templateUrl: '../views/artist-detail.html',
-    providers: [UserService, ArtistService]
+    providers: [UserService, ArtistService, AlbumService]
 })
 
 export class ArtistDetailComponent implements OnInit {
     public artist: Artist;
+    public albums: Album[];
     public identity;
     public token;
     public url: string;
@@ -22,7 +25,9 @@ export class ArtistDetailComponent implements OnInit {
     constructor(private _route: ActivatedRoute,
         private _router: Router,
         private _userService: UserService,
-        private _artistService: ArtistService) {
+        private _artistService: ArtistService,
+        private _albumService: AlbumService
+    ) {
 
         this.identity = this._userService.getIdentity();
         this.token = this._userService.getToken();
@@ -50,6 +55,24 @@ export class ArtistDetailComponent implements OnInit {
                         this.artist = response.artist;
 
                         //Sacar los albums del artista
+                        this._albumService.getAlbums(this.token, response.artist._id).subscribe(
+                            response => {
+                                if (!response.albums) {
+                                    this.alertMessage = 'Este artista no tiene albums';
+                                } else {
+                                    this.albums = response.albums;
+                                }
+
+                            }
+                            , error => {
+                                var errorMessage = <any>error;
+                                if (errorMessage != null) {
+                                    var body = JSON.parse(error._body)
+                                    //this.alertMessage = body.message;
+
+                                }
+                            }
+                        );
                     }
                 },
                 error => {
@@ -63,7 +86,33 @@ export class ArtistDetailComponent implements OnInit {
             )
         });
     }
+    public confirmado;
+    onDeleteConfirm(id) {
+        this.confirmado = id;
 
+    }
+    onCancelAlbum() {
+        this.confirmado = null;
+    }
+    onDeleteAlbum(id) {
+        this._albumService.deleteAlbum(this.token, id).subscribe(
+            response => {
+                if (!response.albumRemoved) {
+                    alert('Error en el servidor');
+                    console.log(response);
+                }
+                this.getArtist();
 
+            }
+            , error => {
+                var errorMessage = <any>error;
+                if (errorMessage != null) {
+                    var body = JSON.parse(error._body)
+                    //this.alertMessage = body.message;
+
+                }
+            }
+        );
+    }
 
 }

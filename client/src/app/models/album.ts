@@ -3,7 +3,6 @@ export class Album {
         public title: string,
         public description: string,
         public year: number,
-        public password: string,
         public image: string,
         public artist: string
     ) { }

@@ -3,19 +3,20 @@ import { Router, ActivatedRoute, Params } from '@angular/router';
 
 import { GLOBAL } from '../services/global';
 import { UserService } from '../services/user.service';
-import { ArtistService } from '../services/artist.service';
+import { AlbumService } from '../services/album.service';
 import { UploadService } from '../services/upload.service';
 import { Artist } from '../models/artist';
+import { Album } from '../models/album';
 
 @Component({
-    selector: 'artist-edit',
-    templateUrl: '../views/artist-add.html',
-    providers: [UserService, ArtistService, UploadService]
+    selector: 'album-edit',
+    templateUrl: '../views/album-add.html',
+    providers: [UserService, AlbumService, UploadService]
 })
 
-export class ArtistEditComponent implements OnInit {
+export class AlbumEditComponent implements OnInit {
     public titulo: string;
-    public artist: Artist;
+    public album: Album;
     public identity;
     public token;
     public url: string;
@@ -24,95 +25,94 @@ export class ArtistEditComponent implements OnInit {
 
     constructor(private _route: ActivatedRoute,
         private _router: Router,
-        private _uploadService: UploadService,
         private _userService: UserService,
-        private _artistService: ArtistService) {
+        private _albumService: AlbumService,
+        private _uploadService: UploadService
+    ) {
 
-        this.titulo = 'Editar artista';
+        this.titulo = 'Editar album';
         this.identity = this._userService.getIdentity();
         this.token = this._userService.getToken();
         this.url = GLOBAL.url;
-        this.artist = new Artist('', '', '');
+        this.album = new Album('', '', 2017, '', '');
         this.is_edit = true;
 
     }
 
     ngOnInit() {
-        console.log('artist-edit.component.ts cargado');
-        //Lamar al método del api para sacar un artista en base a su Id getartist
-        this.getArtist();
+        console.log('album-edit.component.ts cargado...');
+
+        //Conseguir el album
+        this.getalbum();
     }
 
-    getArtist() {
+    getalbum() {
         this._route.params.forEach((params: Params) => {
             let id = params['id'];
 
-            this._artistService.getArtist(this.token, id).subscribe(
-                response => {
-                    this.artist = response.artist;
+            this._albumService.getAlbum(this.token, id).subscribe(
 
-                    if (!response.artist) {
+                response => {
+                    if (!response.album) {
                         this._router.navigate(['/'])
                     } else {
-                        this.artist = response.artist;
+                        this.album = response.album;
                     }
+
                 },
                 error => {
                     var errorMessage = <any>error;
                     if (errorMessage != null) {
-                        var body = JSON.parse(error._body)
-                        //this.alertMessage = body.message;
-
+                        var body = JSON.parse(error._body);
+                        console.log(error);
                     }
                 }
-            )
+
+            );
         });
     }
 
     onSubmit() {
-        console.log(this.artist);
         this._route.params.forEach((params: Params) => {
             let id = params['id'];
 
-            this._artistService.editArtist(this.token, id, this.artist).subscribe(
+            this._albumService.editAlbum(this.token, id, this.album).subscribe(
                 response => {
-                    if (!response.artist) {
+                    if (!response.album) {
                         this.alertMessage = 'Error en el servidor';
+                        console.log(response);
                     } else {
-                        this.alertMessage = 'El artista se ha actualizado correctamente!';
+                        this.alertMessage = '¡El album se ha actualizado correctamente!';
                         if (!this.filesToUpload) {
-                            this._router.navigate(['/artista', response.artist._id]);
+                            //Redirigir
+                            this._router.navigate(['/artista', response.album.artist]);
                         } else {
-
-
-                            //Subir la imagn del artista
-                            this._uploadService.makeFileRequest(this.url + 'upload-image-artist/' + id,
+                            //Subir la imagen del album
+                            this._uploadService.makeFileRequest(this.url + 'upload-image-album/' + id,
                                 [], this.filesToUpload, this.token, 'image').then(
                                 (result) => {
-                                    this._router.navigate(['/artista', response.artist._id]);
+                                    this._router.navigate(['/artista', response.album.artist]);
                                 },
-                                (error => {
+                                (error) => {
                                     console.log(error);
-                                })
+                                }
+
                                 );
-                            //this.artist = response.artist;
-                            // this._router.navigate(['/editar-artista'], response.artist._id);
                         }
                     }
 
                 },
                 error => {
                     var errorMessage = <any>error;
-                    console.log("**********************");
-                    console.log(error);
-                    console.log("**********************");
                     if (errorMessage != null) {
                         var body = JSON.parse(error._body)
                         this.alertMessage = body.message;
-
+                        console.log(error);
                     }
                 }
-            )
+
+            );
+
         });
     }
 
@@ -120,4 +120,5 @@ export class ArtistEditComponent implements OnInit {
     fileChangeEvent(fileInput: any) {
         this.filesToUpload = <Array<File>>fileInput.target.files;
     }
+
 }
